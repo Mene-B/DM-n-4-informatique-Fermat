@@ -133,6 +133,7 @@ let read_file (fn : string) : string =
   let res = input_line ic in 
   close_in ic ; res 
 
+(* Compte le nombre d'opérateurs dans f*)
 let rec compte_ops (f: formule): int =
 	match f with
 	| And (f1, f2) | Or (f1, f2) -> 1 + compte_ops f1 + compte_ops f2
