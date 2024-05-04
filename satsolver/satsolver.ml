@@ -167,7 +167,7 @@ let rec trie_strict (l : 'a list) : bool =
 	| _::[] | [] -> true
 	| x::y::q -> if (x<y) then trie_strict(y::q) else false;;
 
-type valuation = (string*bool) list;
+type valuation = (string*bool) list
 
 (* Si l représente un nombre x en binaire, renvoie x+1 en binaire*)
 let add_one (l : bool list) : bool list = 
