@@ -126,14 +126,6 @@ let test_from_file () =
 	assert (from_file "tests/test2.txt" = parse "((((a | b) & (~c & d) > ((~(e | f) > (g & h) & i) | j))) | ((k & l) & m) > (~(~n | o) & p)) | (((q & r) & s) > ((~t | ~u) > (((~v | w) & x) | (y&z))))");
 	assert (from_file "tests/test3.txt" = parse "(e & f) > (a | b) & (c |d)");;
 
-(* Fonction de test *)
-let test () = 
-  assert (1=1);
-  test_from_file();
-  test_parse();
-  print_string "Tous les tests ont réussi \n"
-
-
 
 (*Renvoie le contenu du fichier fn sous forme de string.
    Le fichier ne doit contenir qu'une seule ligne*) 
@@ -176,6 +168,18 @@ let rec add_one (l : bool list) : bool list =
 	| x::q -> 
 		if x = true then false::add_one q 
 		else true::q
+
+let test_add_one() = 
+	assert(add_one [true;false;false;true] = [false;true;false;true]);
+	assert(add_one [true;true;true] = [false;false;false;true]) 
+			
+(* Fonction de test *)
+let test () = 
+	assert (1=1);
+	test_from_file();
+	test_parse();
+	test_add_one();
+	print_string "Tous les tests ont réussi \n"
 
 let main () = 
   if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument\n" else 
