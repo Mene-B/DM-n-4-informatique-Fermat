@@ -153,6 +153,14 @@ let rec union (l1 : 'a list) (l2 : 'a list) : 'a list =
     else x2::(union l1 q2)
 
 
+(* Renvoie la liste des variables de f, sans doublons*)
+let rec list_var (f : formule) : string list =  
+  match f with
+	| Top | Bot -> []
+	| And (f1, f2) | Or (f1, f2) -> union (list_var f1) (list_var f2)
+	| Not f1 -> list_var f1
+	| Var s -> [s]
+
 
 let rec trie_strict (l : 'a list) : bool = 
 	match l with
