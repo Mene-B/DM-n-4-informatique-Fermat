@@ -163,7 +163,7 @@ let rec union (l1 : 'a list) (l2 : 'a list) : 'a list =
 (* Renvoie true si la liste l est triée dans l'ordre strictement croissant false sinon *)
 let rec trie_strict (l : 'a list) : bool = 
 	match l with
-	| x::[] | [] -> true
+	| _::[] | [] -> true
 	| x::y::q -> if (x<y) then trie_strict(y::q) else false;;
 
 
