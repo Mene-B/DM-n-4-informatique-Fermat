@@ -122,11 +122,8 @@ let test_parse () =
 (* Fonction de test de la fonction from_file *)
 let test_from_file () =
 	assert (from_file "tests/test1.txt" = parse "(~((a & b) > (b | d))) | (a & e)");
-	print_string("test1 bon\n");
 	assert (from_file "tests/test2.txt" = parse "((((a | b) & (~c & d) > ((~(e | f) > (g & h) & i) | j))) | ((k & l) & m) > (~(~n | o) & p)) | (((q & r) & s) > ((~t | ~u) > (((~v | w) & x) | (y&z))))");
-	print_string("test1 bon\n");
-	assert (from_file "tests/test3.txt" = parse "(e & f) > (a | b) & (c |d)");
-	print_string("test1 bon\n");;
+	assert (from_file "tests/test3.txt" = parse "(e & f) > (a | b) & (c |d)");;
 
 (* Fonction de test *)
 let test () = 
