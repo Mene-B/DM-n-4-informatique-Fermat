@@ -237,7 +237,9 @@ let test_valuation_init () =
 	assert (valuation_init ["a"; "b"; "c"] = [("a",false);("b",false);("c",false)]);;
 
 
+(* Type sat_result qui permet de différencier le cas où la formule n'est pas satisfiable (None) ou l'est par la valusation sigma (Some(sigma)) *)
 type sat_result = valuation option
+
 
 (* SAT solver naif qui teste toutes les valuations possibles 
 	Renvoie la première valuation qui satisfait f
@@ -248,12 +250,12 @@ let sat_solver_naif (f: formule) : sat_result =
 		| None -> None
 		| Some s -> if (interprete_f s f1 = true) then (Some s) else (aux_sat_solver_naif f1 (valuation_next s))
 	in aux_sat_solver_naif f (Some (valuation_init (list_var f)));;
-
-
+(* Tests *)
 let test_sat_solver_naif () = 
 	assert(sat_solver_naif (And (Var "a", Not (Var "a"))) = None);
-	assert(interprete_f (let Some sigma = sat_solver_naif (from_file "tests/test1.txt") in sigma) (from_file "tests/test1.txt") = true);;
-
+	assert(sat_solver_naif (from_file "tests/test4.txt") = Some [("a",false);("b",false);("c",false);("d",false)]);
+	assert(sat_solver_naif (from_file "tests/test5.txt") = None);
+ 	assert(sat_solver_naif (from_file "tests/test6.txt") = Some [("a",true);("b",false);("c",false)]);;
 
 
 (* Fonction de test *)
