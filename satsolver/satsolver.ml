@@ -66,6 +66,8 @@ let priority (c: char) : int = match c with
 
 (* Renvoie une formule construite à partir de la chaîne s.
    Lève une exception Erreur_syntaxe si la chaîne ne représente pas une formule valide. *)
+
+
 let parse (s: string) : formule =
 	let n = String.length s in
 	(* construit une formule à partir de s[i..j] *)
@@ -113,11 +115,16 @@ let from_file (filename: string) : formule =
 
 let test_parse () =
 	assert (parse "a | (b & ~c)" = Or(Var "a", And(Var "b", Not (Var "c"))));
-	print_string "Tests OK\n";;
+	assert (parse "(a > b) > c" = Or(Not ( Or(Not (Var "a"), Var "b")), Var "c"));
+	assert (parse "~(a | ~b) & (c | d)" = And(Not (Or(Var "a", Not (Var "b"))), Or(Var "c", Var "d")));
+	assert (parse "~~~~~~a" = Not (Not (Not (Not (Not (Not (Var "a")))))));;
+
 
 let test () = 
   assert (1=1);
+  test_parse();
   print_string "Tous les tests ont réussi \n"
+
 
 (*Renvoie le contenu du fichier fn sous forme de string.
    Le fichier ne doit contenir qu'une seule ligne*) 
