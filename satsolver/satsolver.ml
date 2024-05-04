@@ -247,6 +247,7 @@ let test () =
 	test_add_one();
  	test_interprete();
  	test_valuation_init();
+ 	test_valuation_next();
 	print_string "Tous les tests ont réussi \n"
 
 let main () = 
