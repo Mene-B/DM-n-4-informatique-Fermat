@@ -166,6 +166,13 @@ let rec trie_strict (l : 'a list) : bool =
 	| _::[] | [] -> true
 	| x::y::q -> if (x<y) then trie_strict(y::q) else false;;
 
+(* Renvoie la liste des variables de f, sans doublons*)
+let rec list_var (f : formule) : string list =  
+  match f with
+	| Top | Bot -> []
+	| And (f1, f2) | Or (f1, f2) -> union (list_var f1) (list_var f2)
+	| Not f1 -> list_var f1
+	| Var s -> [s] 
 
 let main () = 
   if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument\n" else 
