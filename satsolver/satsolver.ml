@@ -66,6 +66,8 @@ let priority (c: char) : int = match c with
 
 (* Renvoie une formule construite à partir de la chaîne s.
    Lève une exception Erreur_syntaxe si la chaîne ne représente pas une formule valide. *)
+
+
 let parse (s: string) : formule =
 	let n = String.length s in
 	(* construit une formule à partir de s[i..j] *)
@@ -111,13 +113,12 @@ let from_file (filename: string) : formule =
 	let s = read_lines f in
 	parse s
 
-
-(* Fonction de test de la fonction parse *)
 let test_parse () =
 	assert (parse "a | (b & ~c)" = Or(Var "a", And(Var "b", Not (Var "c"))));
 	assert (parse "(a > b) > c" = Or(Not ( Or(Not (Var "a"), Var "b")), Var "c"));
 	assert (parse "~(a | ~b) & (c | d)" = And(Not (Or(Var "a", Not (Var "b"))), Or(Var "c", Var "d")));
 	assert (parse "~~~~~~a" = Not (Not (Not (Not (Not (Not (Var "a")))))));;
+
 
 (* Fonction de test de la fonction from_file *)
 let test_from_file () =
@@ -133,19 +134,21 @@ let test () =
   print_string "Tous les tests ont réussi \n"
 
 
-(* Renvoie le contenu du fichier fn sous forme de string.
+
+(*Renvoie le contenu du fichier fn sous forme de string.
    Le fichier ne doit contenir qu'une seule ligne*) 
 let read_file (fn : string) : string = 
   let ic = open_in fn in 
   let res = input_line ic in 
   close_in ic ; res 
 
-(* compte_ops f renvoie le nombre d'opérateurs utilisés dans f *)
 let rec compte_ops (f: formule): int =
 	match f with
 	| And (f1, f2) | Or (f1, f2) -> 1 + compte_ops f1 + compte_ops f2
 	| Not f1 -> 1 + compte_ops f1
 	| _ -> 0
+
+
 
 (* Si l1 et l2 sont triées strictement, union l1 l2 est triée strictement et contient les éléments de l1 et l2*)
 let rec union (l1 : 'a list) (l2 : 'a list) : 'a list = 
@@ -157,22 +160,24 @@ let rec union (l1 : 'a list) (l2 : 'a list) : 'a list =
     else if x1 = x2 then x1::(union q1 q2)
     else x2::(union l1 q2)
 
-(* Renvoie true si la liste l est triée dans l'ordre strictement croissant false sinon *)
+
+
 let rec trie_strict (l : 'a list) : bool = 
 	match l with
 	| _::[] | [] -> true
 	| x::y::q -> if (x<y) then trie_strict(y::q) else false;;
 
-(* Renvoie la liste des variables de f, sans doublons*)
-let rec list_var (f : formule) : string list =  
-  match f with
-	| Top | Bot -> []
-	| And (f1, f2) | Or (f1, f2) -> union (list_var f1) (list_var f2)
-	| Not f1 -> list_var f1
-	| Var s -> [s] 
+type valuation = (string*bool) list;
+
+
+
 
 let main () = 
   if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument\n" else 
+  if (Sys.argv.(1) = "test") then test () else 
+  print_string (read_file Sys.argv.(1))
+
+let _ = main ()
   if (Sys.argv.(1) = "test") then test () else 
   print_string (read_file Sys.argv.(1))
 
