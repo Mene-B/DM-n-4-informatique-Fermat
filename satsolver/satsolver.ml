@@ -196,6 +196,15 @@ let test_interprete () =
 	assert (interprete_f ([("a",true);("b",false);("d",false);("e",true)]) (from_file "tests/test1.txt") = true);
 	assert (interprete_f ([("a",true);("b",true);("d",false);("e",false)]) (from_file "tests/test1.txt") = false);;
 			
+let valuation_init (sl: string list): valuation =
+	List.map (fun (s: string) -> (s, false)) sl
+
+let test_valuation_init () =
+	assert (valuation_init ["a"; "b"; "c"] = [("a",false);("b",false);("c",false)]);;
+
+
+
+
 (* Fonction de test *)
 let test () = 
 	assert (1=1);
@@ -203,6 +212,7 @@ let test () =
 	test_parse();
 	test_add_one();
  	test_interprete();
+ 	test_valuation_init();
 	print_string "Tous les tests ont réussi \n"
 
 let main () = 
