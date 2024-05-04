@@ -139,11 +139,14 @@ let rec compte_ops (f: formule): int =
 	| Not f1 -> 1 + compte_ops f1
 	| _ -> 0
 
-
-
-
-
-
+let rec union (l1 : 'a list) (l2 : 'a list) : 'a list = 
+  match (l1, l2) with
+  | ([], _) -> l2 
+  | (_ , []) -> l1
+  | (x1::q1,x2::q2) -> 
+    if x1 < x2 then x1::(union q1 l2)
+    else if x1 = x2 then x1::(union q1 q2)
+    else x2::(union l1 q2)
 
 
 let main () = 
