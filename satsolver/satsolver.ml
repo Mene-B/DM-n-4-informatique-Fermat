@@ -66,8 +66,6 @@ let priority (c: char) : int = match c with
 
 (* Renvoie une formule construite à partir de la chaîne s.
    Lève une exception Erreur_syntaxe si la chaîne ne représente pas une formule valide. *)
-
-
 let parse (s: string) : formule =
 	let n = String.length s in
 	(* construit une formule à partir de s[i..j] *)
@@ -113,26 +111,40 @@ let from_file (filename: string) : formule =
 	let s = read_lines f in
 	parse s
 
+
+(* Fonction de test de la fonction parse *)
 let test_parse () =
 	assert (parse "a | (b & ~c)" = Or(Var "a", And(Var "b", Not (Var "c"))));
 	assert (parse "(a > b) > c" = Or(Not ( Or(Not (Var "a"), Var "b")), Var "c"));
 	assert (parse "~(a | ~b) & (c | d)" = And(Not (Or(Var "a", Not (Var "b"))), Or(Var "c", Var "d")));
 	assert (parse "~~~~~~a" = Not (Not (Not (Not (Not (Not (Var "a")))))));;
 
+(* Fonction de test de la fonction from_file *)
+let test_from_file () =
+	assert (from_file "tests/test1.txt" = parse "(~((a & b) > (b | d))) | (a & e)");
+	print_string("test1 bon\n");
+	assert (from_file "tests/test2.txt" = parse "((((a | b) & (~c & d) > ((~(e | f) > (g & h) & i) | j))) | ((k & l) & m) > (~(~n | o) & p)) | (((q & r) & s) > ((~t | ~u) > (((~v | w) & x) | (y&z))))");
+	print_string("test1 bon\n");
+	assert (from_file "tests/test3.txt" = parse "(e & f) > (a | b) & (c |d)");
+	print_string("test1 bon\n");;
 
+(* Fonction de test *)
 let test () = 
   assert (1=1);
+  test_from_file();
   test_parse();
   print_string "Tous les tests ont réussi \n"
 
 
-(*Renvoie le contenu du fichier fn sous forme de string.
+(* Renvoie le contenu du fichier fn sous forme de string.
    Le fichier ne doit contenir qu'une seule ligne*) 
 let read_file (fn : string) : string = 
   let ic = open_in fn in 
   let res = input_line ic in 
   close_in ic ; res 
 
+
+(* compte_ops f renvoie le nombre d'opérateurs utilisés dans f *)
 let rec compte_ops (f: formule): int =
 	match f with
 	| And (f1, f2) | Or (f1, f2) -> 1 + compte_ops f1 + compte_ops f2
