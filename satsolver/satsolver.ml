@@ -189,6 +189,7 @@ let rec find_val (s: valuation) (var: string) : bool =
 	| _ -> false;;
 
 
+
 (* Fonction qui interprete la formule f dans la valuation s *)
 let rec interprete_f (s: valuation) (f: formule) : bool = 
 	match f with 
@@ -203,15 +204,30 @@ let test_interprete () =
 	assert (interprete_f [("a",false);("b",true);("d",true);("e",true)] (from_file "tests/test1.txt") = false);
 	assert (interprete_f ([("a",true);("b",false);("d",false);("e",true)]) (from_file "tests/test1.txt") = true);
 	assert (interprete_f ([("a",true);("b",true);("d",false);("e",false)]) (from_file "tests/test1.txt") = false);;
-			
+		
+
+(* Renvoie la valuation suivant de v. Si v est la val max, renvoie None*)
+let valuation_next (v : valuation) : valuation option= 
+	let rec aux (v : valuation): valuation*bool = 
+	match v with 
+	| [] -> ([],true)
+	| (s,b)::q -> 
+	  if b = false then ((s,true)::q,false)
+		else let (l,m) = aux q in ((s,false)::l ,m) in 
+	let (l,b) = aux v in 
+	if b = true then None 
+	else Some l
+
+let test_valuation_next() = 
+	assert(valuation_next [("a",true);("b",true)] = None);
+	assert(valuation_next [("a",true);("b",false)] = Some [("a",false);("b",true)]);
+	assert(valuation_next [("a",false);("b",true)] = Some [("a",true);("b",true)])
+
 let valuation_init (sl: string list): valuation =
 	List.map (fun (s: string) -> (s, false)) sl
 
 let test_valuation_init () =
 	assert (valuation_init ["a"; "b"; "c"] = [("a",false);("b",false);("c",false)]);;
-
-
-
 
 (* Fonction de test *)
 let test () = 
@@ -220,6 +236,7 @@ let test () =
 	test_parse();
 	test_add_one();
  	test_interprete();
+  	test_valuation_next();
  	test_valuation_init();
 	print_string "Tous les tests ont réussi \n"
 
