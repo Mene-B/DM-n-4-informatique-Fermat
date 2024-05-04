@@ -133,6 +133,18 @@ let read_file (fn : string) : string =
   let res = input_line ic in 
   close_in ic ; res 
 
+let rec compte_ops (f: formule): int =
+	match f with
+	| And (f1, f2) | Or (f1, f2) -> 1 + compte_ops f1 + compte_ops f2
+	| Not f1 -> 1 + compte_ops f1
+	| _ -> 0
+
+
+
+
+
+
+
 
 let main () = 
   if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument\n" else 
