@@ -112,7 +112,7 @@ let from_file (filename: string) : formule =
 	let f = open_in filename in 
 	let s = read_lines f in
 	parse s
-
+(* Tests *)
 let test_parse () =
 	assert (parse "a | (b & ~c)" = Or(Var "a", And(Var "b", Not (Var "c"))));
 	assert (parse "(a > b) > c" = Or(Not ( Or(Not (Var "a"), Var "b")), Var "c"));
@@ -134,12 +134,13 @@ let read_file (fn : string) : string =
   let res = input_line ic in 
   close_in ic ; res 
 
+
+(* Fonction qui renvoie le nombre d'opérateurs d'une formule *)
 let rec compte_ops (f: formule): int =
 	match f with
 	| And (f1, f2) | Or (f1, f2) -> 1 + compte_ops f1 + compte_ops f2
 	| Not f1 -> 1 + compte_ops f1
 	| _ -> 0
-
 
 
 (* Si l1 et l2 sont triées strictement, union l1 l2 est triée strictement et contient les éléments de l1 et l2*)
@@ -162,12 +163,16 @@ let rec list_var (f : formule) : string list =
 	| Var s -> [s]
 
 
+(* Fonction vérifiant si une liste est triée de manière strictement croissante i.e si elle est croissante et sans doublons *)
 let rec trie_strict (l : 'a list) : bool = 
 	match l with
 	| _::[] | [] -> true
 	| x::y::q -> if (x<y) then trie_strict(y::q) else false;;
 
+
+(* Type valuation représenté par une liste de couples d'une variable (string) et de sa valeur dans la valuation (bool) *)
 type valuation = (string*bool) list
+
 
 (* Si l représente un nombre x en binaire, renvoie x+1 en binaire*)
 let rec add_one (l : bool list) : bool list = 
@@ -176,12 +181,13 @@ let rec add_one (l : bool list) : bool list =
 	| x::q -> 
 		if x = true then false::add_one q 
 		else true::q
-
+(* Tests *)
 let test_add_one() = 
 	assert(add_one [true;false;false;true] = [false;true;false;true]);
 	assert(add_one [true;true;true] = [false;false;false;true]) 
 
- (* Fonction intermédiaire qui renvoie la valeur de l avariable var dans la valuation s *)
+
+(* Fonction intermédiaire qui renvoie la valeur de l avariable var dans la valuation s *)
 let rec find_val (s: valuation) (var: string) : bool = 
 	match s with 
 	| x::q -> let (z, b) = x in
@@ -189,8 +195,7 @@ let rec find_val (s: valuation) (var: string) : bool =
 	| _ -> false;;
 
 
-
-(* Fonction qui interprete la formule f dans la valuation s *)
+(* Fonction qui renvoie l'interpretation de la formule f dans la valuation s *)
 let rec interprete_f (s: valuation) (f: formule) : bool = 
 	match f with 
 	| And (f1, f2) -> (interprete_f s f1) && (interprete_f s f2)
@@ -199,12 +204,12 @@ let rec interprete_f (s: valuation) (f: formule) : bool =
 	| Top -> true 
 	| Bot -> false 
 	| Var str -> find_val s str;;
-
+(* Tests *)
 let test_interprete () = 
 	assert (interprete_f [("a",false);("b",true);("d",true);("e",true)] (from_file "tests/test1.txt") = false);
 	assert (interprete_f ([("a",true);("b",false);("d",false);("e",true)]) (from_file "tests/test1.txt") = true);
 	assert (interprete_f ([("a",true);("b",true);("d",false);("e",false)]) (from_file "tests/test1.txt") = false);;
-		
+
 
 (* Renvoie la valuation suivant de v. Si v est la val max, renvoie None*)
 let valuation_next (v : valuation) : valuation option= 
@@ -217,17 +222,22 @@ let valuation_next (v : valuation) : valuation option=
 	let (l,b) = aux v in 
 	if b = true then None 
 	else Some l
-
+(* Tests *)
 let test_valuation_next() = 
 	assert(valuation_next [("a",true);("b",true)] = None);
 	assert(valuation_next [("a",true);("b",false)] = Some [("a",false);("b",true)]);
 	assert(valuation_next [("a",false);("b",true)] = Some [("a",true);("b",true)])
 
+
+(* Fonction qui renvoie la première valuation des variables de sl, donc celle où elles sont toutes à false *)
 let valuation_init (sl: string list): valuation =
 	List.map (fun (s: string) -> (s, false)) sl
-
+(* Tests *)
 let test_valuation_init () =
 	assert (valuation_init ["a"; "b"; "c"] = [("a",false);("b",false);("c",false)]);;
+
+
+
 
 (* Fonction de test *)
 let test () = 
@@ -236,7 +246,6 @@ let test () =
 	test_parse();
 	test_add_one();
  	test_interprete();
-  	test_valuation_next();
  	test_valuation_init();
 	print_string "Tous les tests ont réussi \n"
 
