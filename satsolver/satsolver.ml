@@ -237,6 +237,23 @@ let test_valuation_init () =
 	assert (valuation_init ["a"; "b"; "c"] = [("a",false);("b",false);("c",false)]);;
 
 
+type sat_result = valuation option
+
+(* SAT solver naif qui teste toutes les valuations possibles 
+	Renvoie la première valuation qui satisfait f
+	Renvoie None si f n'est pas satisfiable	*)
+let sat_solver_naif (f: formule) : sat_result = 
+	let rec aux_sat_solver_naif (f1: formule) (sigma: valuation option) : sat_result = 
+		match sigma with 
+		| None -> None
+		| Some s -> if (interprete_f s f1 = true) then (Some s) else (aux_sat_solver_naif f1 (valuation_next s))
+	in aux_sat_solver_naif f (Some (valuation_init (list_var f)));;
+
+
+let test_sat_solver_naif () = 
+	assert(sat_solver_naif (And (Var "a", Not (Var "a"))) = None);
+	assert(interprete_f (let Some sigma = sat_solver_naif (from_file "tests/test1.txt") in sigma) (from_file "tests/test1.txt") = true);;
+
 
 
 (* Fonction de test *)
@@ -246,6 +263,7 @@ let test () =
 	test_parse();
 	test_add_one();
  	test_interprete();
+  	test_sat_solver_naif();
  	test_valuation_init();
  	test_valuation_next();
 	print_string "Tous les tests ont réussi \n"
