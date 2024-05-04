@@ -143,7 +143,6 @@ let read_file (fn : string) : string =
   let res = input_line ic in 
   close_in ic ; res 
 
-
 (* compte_ops f renvoie le nombre d'opérateurs utilisés dans f *)
 let rec compte_ops (f: formule): int =
 	match f with
@@ -151,11 +150,21 @@ let rec compte_ops (f: formule): int =
 	| Not f1 -> 1 + compte_ops f1
 	| _ -> 0
 
+(* Si l1 et l2 sont triées strictement, union l1 l2 est triée strictement et contient les éléments de l1 et l2*)
+let rec union (l1 : 'a list) (l2 : 'a list) : 'a list = 
+  match (l1, l2) with
+  | ([], _) -> l2 
+  | (_ , []) -> l1
+  | (x1::q1,x2::q2) -> 
+    if x1 < x2 then x1::(union q1 l2)
+    else if x1 = x2 then x1::(union q1 q2)
+    else x2::(union l1 q2)
 
-
-
-
-
+(* Renvoie true si la liste l est triée dans l'ordre strictement croissant false sinon *)
+let rec trie_strict (l : 'a list) : bool = 
+	match l with
+	| x::[] | [] -> true
+	| x::y::q -> if (x<y) then trie_strict(y::q) else false;;
 
 
 let main () = 
