@@ -172,6 +172,29 @@ let rec add_one (l : bool list) : bool list =
 let test_add_one() = 
 	assert(add_one [true;false;false;true] = [false;true;false;true]);
 	assert(add_one [true;true;true] = [false;false;false;true]) 
+
+ (* Fonction intermédiaire qui renvoie la valeur de l avariable var dans la valuation s *)
+let rec find_val (s: valuation) (var: string) : bool = 
+	match s with 
+	| x::q -> let (z, b) = x in
+		if z = var then b else find_val q var
+	| _ -> false;;
+
+
+(* Fonction qui interprete la formule f dans la valuation s *)
+let rec interprete_f (s: valuation) (f: formule) : bool = 
+	match f with 
+	| And (f1, f2) -> (interprete_f s f1) && (interprete_f s f2)
+	| Or (f1, f2) -> (interprete_f s f1) || (interprete_f s f2)
+	| Not f1 -> not (interprete_f s f1)
+	| Top -> true 
+	| Bot -> false 
+	| Var str -> find_val s str;;
+
+let test_interprete () = 
+	assert (interprete_f [("a",false);("b",true);("d",true);("e",true)] (from_file "tests/test1.txt") = false);
+	assert (interprete_f ([("a",true);("b",false);("d",false);("e",true)]) (from_file "tests/test1.txt") = true);
+	assert (interprete_f ([("a",true);("b",true);("d",false);("e",false)]) (from_file "tests/test1.txt") = false);;
 			
 (* Fonction de test *)
 let test () = 
@@ -179,6 +202,7 @@ let test () =
 	test_from_file();
 	test_parse();
 	test_add_one();
+ 	test_interprete();
 	print_string "Tous les tests ont réussi \n"
 
 let main () = 
