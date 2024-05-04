@@ -150,6 +150,12 @@ let rec union (l1 : 'a list) (l2 : 'a list) : 'a list =
     else if x1 = x2 then x1::(union q1 q2)
     else x2::(union l1 q2)
 
+(* Renvoie true si la liste l est triée dans l'ordre strictement croissant false sinon *)
+let rec trie_strict (l : 'a list) : bool = 
+	match l with
+	| x::[] | [] -> true
+	| x::y::q -> if (x<y) then trie_strict(y::q) else false;;
+
 
 let main () = 
   if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument\n" else 
