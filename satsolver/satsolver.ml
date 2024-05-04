@@ -170,7 +170,7 @@ let rec trie_strict (l : 'a list) : bool =
 type valuation = (string*bool) list
 
 (* Si l représente un nombre x en binaire, renvoie x+1 en binaire*)
-let add_one (l : bool list) : bool list = 
+let rec add_one (l : bool list) : bool list = 
   match l with 
 	| [] -> [true]
 	| x::q -> 
