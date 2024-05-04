@@ -169,15 +169,16 @@ let rec trie_strict (l : 'a list) : bool =
 
 type valuation = (string*bool) list;
 
-
-
+(* Si l représente un nombre x en binaire, renvoie x+1 en binaire*)
+let add_one (l : bool list) : bool list = 
+  match l with 
+	| [] -> [true]
+	| x::q -> 
+		if x = true then false::add_one q 
+		else true::q
 
 let main () = 
   if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument\n" else 
-  if (Sys.argv.(1) = "test") then test () else 
-  print_string (read_file Sys.argv.(1))
-
-let _ = main ()
   if (Sys.argv.(1) = "test") then test () else 
   print_string (read_file Sys.argv.(1))
 
