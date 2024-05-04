@@ -139,6 +139,7 @@ let rec compte_ops (f: formule): int =
 	| Not f1 -> 1 + compte_ops f1
 	| _ -> 0
 
+(* Si l1 et l2 sont triées strictement, union l1 l2 est triée strictement et contient les éléments de l1 et l2*)
 let rec union (l1 : 'a list) (l2 : 'a list) : 'a list = 
   match (l1, l2) with
   | ([], _) -> l2 
