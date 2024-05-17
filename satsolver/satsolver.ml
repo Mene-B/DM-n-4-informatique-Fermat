@@ -115,7 +115,7 @@ let from_file (filename: string) : formule =
 (* Tests *)
 let test_parse () =
 	assert (parse "a | (b & ~c)" = Or(Var "a", And(Var "b", Not (Var "c"))));
-	assert (parse "(a > b) > c" = Or(Not ( Or(Not (Var "a"), Var "b")), Var "c"));
+	assert (parse "(a > b) > c" = Or(Not (Or (Not (Var "a"), Var "b")), Var "c"));
 	assert (parse "~(a | ~b) & (c | d)" = And(Not (Or(Var "a", Not (Var "b"))), Or(Var "c", Var "d")));
 	assert (parse "~~~~~~a" = Not (Not (Not (Not (Not (Not (Var "a")))))));;
 
@@ -257,6 +257,48 @@ let test_sat_solver_naif () =
 	assert(sat_solver_naif (from_file "tests/test5.txt") = None);
  	assert(sat_solver_naif (from_file "tests/test6.txt") = Some [("a",true);("b",false);("c",false)]);;
 
+(* sipmle_step f renvoie un couple composé de f avec une étape de simplification suplémentaire
+ (si c'est possible) et un booléen indiquant si une étape a été éffectuée *)
+let rec simpl_step (f: formule): (formule * bool) = 
+	match f with
+	| And (Top, f1) | And (f1, Top) | Or (Bot, f1) | Or (f1, Bot) -> (f1, true)
+	| And (Bot, f1) | And (f1, Bot) -> (Bot, true)
+	| Or (Top, f1) | Or (f1, Top) -> (Top, true)
+	| Not (Not (f1)) -> (f1, true)
+	| Not (Top) -> (Bot, true)
+	| Not (Bot) -> (Top, true)
+	| And (f1, f2) -> let (f1s, b1) = simpl_step f1 in let (f2s, b2) = simpl_step f2 in (And(f1s, f2s), b1 || b2)
+	| Or (f1, f2) -> let (f1s, b1) = simpl_step f1 in let (f2s, b2) = simpl_step f2 in (Or(f1s, f2s), b1 || b2)
+	| Not (f1) -> let (f1s,b1) = simpl_step f1 in (Not f1s, b1)
+	| x -> (x, false)
+(* Tests *)
+let test_simpl_step () =
+	assert(simpl_step(Not (Not (And (Var "a", Top)))) = (And (Var "a", Top), true));
+	assert(simpl_step(And (Var "a", Top)) = (Var "a", true));
+	assert(simpl_step(And(Var "a", Var "b")) = (And (Var "a", Var "b"), false));;
+
+(* simpl_full f simplifie f au maximum (en appliquant simpl_step autant nécessaire) *)
+let rec simpl_full (f: formule): formule =
+	let (fs, b) = simpl_step f in 
+	if b then simpl_full fs else fs
+(* Tests *)
+let test_simpl_full () =
+	assert(simpl_full(Var "a") = Var "a");
+	assert(simpl_full(And(Var "a", Not (Top))) = Bot);
+	assert(simpl_full(And(Or (Var "a", Bot), And (Top, Var "b"))) = And (Var "a", Var "b"));;
+
+(* subst f x g renvoie la formule f avec toutes les instances de x remplacées par g *)
+let rec subst (f: formule) (x: string) (g: formule): formule =
+	match f with
+	| And (f1, f2) -> And (subst f1 x g, subst f2 x g)
+	| Or (f1, f2) -> Or (subst f1 x g, subst f2 x g)
+	| Not (f1) -> Not(subst f1 x g)
+	| Var s -> if s = "a" then g else Var s
+	| f1 -> f1 (* Bot ou Top -> ne change rien *)
+(* Tests *)
+let test_subst () =
+	assert(subst (Var "a") "a" Top = Top);
+	assert(subst (Or(Var "a",Var "b")) "a" (Var "b") = Or (Var "b", Var "b"));;
 
 (* Fonction de test *)
 let test () = 
@@ -265,13 +307,16 @@ let test () =
 	test_parse();
 	test_add_one();
  	test_interprete();
-  	test_sat_solver_naif();
+  test_sat_solver_naif();
  	test_valuation_init();
  	test_valuation_next();
+ 	test_simpl_step();
+ 	test_simpl_full();
+ 	test_subst();
 	print_string "Tous les tests ont réussi \n"
 
 let main () = 
-  if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument\n" else 
+  if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument" else 
   if (Sys.argv.(1) = "test") then test () else 
   print_string (read_file Sys.argv.(1))
 
