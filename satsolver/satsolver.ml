@@ -270,7 +270,7 @@ let rec simpl_step (f: formule): (formule * bool) =
 	| And (f1, f2) -> let (f1s, b1) = simpl_step f1 in let (f2s, b2) = simpl_step f2 in (And(f1s, f2s), b1 || b2)
 	| Or (f1, f2) -> let (f1s, b1) = simpl_step f1 in let (f2s, b2) = simpl_step f2 in (Or(f1s, f2s), b1 || b2)
 	| Not (f1) -> let (f1s,b1) = simpl_step f1 in (Not f1s, b1)
-	| x -> (x, false)
+	| f1 -> (f1, false)
 (* Tests *)
 let test_simpl_step () =
 	assert(simpl_step(Not (Not (And (Var "a", Top)))) = (And (Var "a", Top), true));
@@ -281,6 +281,19 @@ let test_simpl_step () =
 let rec simpl_full (f: formule): formule =
 	let (fs, b) = simpl_step f in 
 	if b then simpl_full fs else fs
+(* La même fonction mais en une compléxité linaire en la taille de la formule *)
+let rec simpl_full_linear (f: formule): formule =
+	match f with
+	| And (Top, f1) | And (f1, Top) | Or (Bot, f1) | Or (f1, Bot) -> simpl_full_linear f1
+	| And (Bot, f1) | And (f1, Bot) -> Bot
+	| Or (Top, f1) | Or (f1, Top) -> Top
+	| Not (Not (f1)) -> simpl_full_linear f1
+	| Not (Top) -> Bot
+	| Not (Bot) -> Top
+	| And (f1, f2) -> simpl_full_linear (And(simpl_full_linear f1, simpl_full_linear f2))
+	| Or (f1, f2) -> simpl_full_linear (Or(simpl_full_linear f1, simpl_full_linear f2))
+	| Not (f1) -> simpl_full_linear(Not(simpl_full_linear f1))
+	| f1 -> f1
 (* Tests *)
 let test_simpl_full () =
 	assert(simpl_full(Var "a") = Var "a");
