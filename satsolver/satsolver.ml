@@ -293,12 +293,38 @@ let rec subst (f: formule) (x: string) (g: formule): formule =
 	| And (f1, f2) -> And (subst f1 x g, subst f2 x g)
 	| Or (f1, f2) -> Or (subst f1 x g, subst f2 x g)
 	| Not (f1) -> Not(subst f1 x g)
-	| Var s -> if s = "a" then g else Var s
+	| Var s -> if s = x then g else Var s
 	| f1 -> f1 (* Bot ou Top -> ne change rien *)
 (* Tests *)
 let test_subst () =
 	assert(subst (Var "a") "a" Top = Top);
 	assert(subst (Or(Var "a",Var "b")) "a" (Var "b") = Or (Var "b", Var "b"));;
+
+(* quine f renvoie un sat_result correspondant à la satisfiabilité de f grâce à l'algorithme de Quine *)
+let quine (f: formule): sat_result =
+	let fs = simpl_full f in
+	let lv0 = list_var fs in
+	let rec quine_reste (ff: formule) (lv: string list): sat_result =
+		match lv with
+		| [] -> begin 
+						if ff = Top then Some([]) else None 
+					end;
+		| x::q -> 
+			begin
+				let r_top = quine_reste (simpl_full (subst ff x Top)) q in 
+				match r_top with
+				| Some (sat_result_list) -> Some((x, true)::sat_result_list)
+				| None -> let r_bot = quine_reste (simpl_full (subst ff x Bot)) q in 
+					begin 
+						match r_bot with
+						| Some (sat_result_list) -> Some((x, false)::sat_result_list)
+						| None -> None
+					end 
+			end
+	in quine_reste fs lv0
+(* Tests *)
+let test_quine () =
+	assert(quine (from_file "tests/test4.txt") = Some[("a", true); ("b", true); ("c", true); "d", true]);;
 
 (* Fonction de test *)
 let test () = 
@@ -313,11 +339,21 @@ let test () =
  	test_simpl_step();
  	test_simpl_full();
  	test_subst();
+ 	test_quine();
 	print_string "Tous les tests ont réussi \n"
 
 let main () = 
   if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument" else 
   if (Sys.argv.(1) = "test") then test () else 
-  print_string (read_file Sys.argv.(1))
+  print_string "Formule : "; print_string (read_file Sys.argv.(1)); print_string "\n" ;
+  let sr = quine (from_file Sys.argv.(1)) in
+  match sr with
+  | None -> print_string "La formule n'est pas satisfiable\n"
+  | Some (sigma) -> print_string "La formule est satisfiable en assignat 1 aux variables suivantes et 0 aux autres :\n";
+  	let rec print_var (sigma: valuation) =
+  		match sigma with
+  		| [] -> print_string ""
+  		| (s, b)::q -> (if b then (print_string s; print_string "\n")) ; print_var q
+  	in print_var sigma
 
 let _ = main ()
