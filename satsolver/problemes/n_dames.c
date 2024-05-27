@@ -1,3 +1,15 @@
+#include "n_dames.h"
+#include "utils.h"
+
+void gen_formule_n_dames(int n, char* filename){
+    FILE* file = fopen(filename,"w");
+    l_formules = malloc(3*sizeof(char*));
+    l_formules[0] = contrainte_toutes_lignes(n);
+    l_formules[1] = contrainte_toutes_colonnes(n);
+    l_formules[2] = contraintes_toutes_diagonales(n);
+    char* formule = toutes_vraies(l_formules,3);
+    fprintf(f,"%s",formule);
+}
 
 int main(int argc, char** argv){
     assert(argc == 2);
