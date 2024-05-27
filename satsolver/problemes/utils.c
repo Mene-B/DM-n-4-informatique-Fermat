@@ -82,7 +82,9 @@ char* non(char* l){
 
 char* au_plus_une(char** l, int n){
     char** l_inter = malloc((n+1)*sizeof(char*));
-    l_inter[0] = non(toutes_vraies(l,n));
+    char* tout_vrai = toutes_vraies(l,n);
+    l_inter[0] = non(tout_vrai);
+    free(tout_vrai);
     
     char** l_une_vraie = malloc(n*sizeof(char*));
     l_une_vraie[0] = l[0];
@@ -95,10 +97,21 @@ char* au_plus_une(char** l, int n){
         l_une_vraie[i-1] = non(l[i-1]);
         free(l_une_vraie[i]);
         l_une_vraie[i] = l[i];
-
         l_inter[i+1] = toutes_vraies(l_une_vraie,n);
     }
-    return au_moins_une(l_inter,n+1);
+
+
+    char* res = au_moins_une(l_inter,n+1);
+
+    for (int i=0; i<n-1; i++){
+        free(l_inter[i]);
+        free(l_une_vraie[i]);
+    }
+    free(l_inter[n-1]);
+    free(l_inter[n]);
+    free(l_une_vraie);
+    free(l_inter);
+    return res;
 }
 
 
