@@ -15,4 +15,4 @@ char* non(char* l);
 char* toutes_vraies(char** l, int n);
 
 //prend une liste l de formules atomiques de taille n et renvoie une formule exprimant le fait qu'au plus une est vraie
-char* au_moins_une(char** l, int n);
+char* au_plus_une(char** l, int n);
