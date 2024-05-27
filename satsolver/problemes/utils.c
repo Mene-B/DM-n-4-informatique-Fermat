@@ -81,35 +81,31 @@ char* non(char* l){
 }
 
 char* au_plus_une(char** l, int n){
-    char** l_inter = malloc((n+1)*sizeof(char*));
-    char* tout_vrai = toutes_vraies(l,n);
-    l_inter[0] = non(tout_vrai);
-    free(tout_vrai);
-    
-    char** l_une_vraie = malloc(n*sizeof(char*));
-    l_une_vraie[0] = l[0];
-    for (int i=1; i<n; i++){
-        l_une_vraie[i] = non(l[i]);
+    // Au plus une formule est vraie peut se traduire en : ∀(f1,f2) ∈ l, ~f1 v ~f2 est vraie car ainsi on n'aura jamais deux formules vraies en même temps.
+    // On fait donc la conjonction de ~f1 et ~f2 pour tout f1, f2 
+    char** l_inter = malloc((n*(n-1)/2)*sizeof(char*)); // Il y a 2 parmi n façon de prendre deux formules de l. 
+    int k = 0; // indice dans l_inter
+    int i = 0; // indice de f1
+    int j = 0; // indice de f2
+    while (i<n-1){
+        j=i+1;
+        while(j<n){
+            char** deux_formules = malloc(2*sizeof(char*));
+            deux_formules[0]=non(l[i]); // ~f1
+            deux_formules[1]=non(l[j]); // ~f2
+            l_inter[k] = au_moins_une(deux_formules,2); // ~f1 v ~f2
+            free(deux_formules[0]);
+            free(deux_formules[1]);
+            free(deux_formules);
+            j++;
+            k++;
+        }
+        i++;
     }
-    l_inter[1] = toutes_vraies(l_une_vraie,n);
-
-    for (int i=1; i<n; i++){
-        l_une_vraie[i-1] = non(l[i-1]);
-        free(l_une_vraie[i]);
-        l_une_vraie[i] = l[i];
-        l_inter[i+1] = toutes_vraies(l_une_vraie,n);
-    }
-
-
-    char* res = au_moins_une(l_inter,n+1);
-
-    for (int i=0; i<n-1; i++){
+    char* res = toutes_vraies(l_inter,n*(n-1)/2); // On fait la conjonction de toutes les disjonctions
+    for (int i=0; i<n*(n-1)/2; i++){
         free(l_inter[i]);
-        free(l_une_vraie[i]);
     }
-    free(l_inter[n-1]);
-    free(l_inter[n]);
-    free(l_une_vraie);
     free(l_inter);
     return res;
 }
