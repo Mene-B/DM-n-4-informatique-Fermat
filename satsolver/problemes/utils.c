@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-/* au_moins_une(l, n) avec l une liste de n strings de formules atomiques 
-	renvoie la conjonction atomique des ces formules */
 char* au_moins_une(char** l, int n){
 	int taille_somme = 0; // Somme de la taille de chaque string
 	// Calcul de cette variable
