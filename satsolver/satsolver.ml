@@ -357,7 +357,7 @@ let test () =
 
 let main () = 
   if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument" else 
-  if (Sys.argv.(1) = "test") then test () else 
+  if (Sys.argv.(1) = "test") then test () else begin
   print_string "Formule : "; print_string (read_file Sys.argv.(1)); print_string "\n" ;
   let sr = quine (from_file Sys.argv.(1)) in
   match sr with
@@ -368,5 +368,5 @@ let main () =
   		| [] -> print_string ""
   		| (s, b)::q -> (if b then (print_string s; print_string "\n")) ; print_var q
   	in print_var sigma
-
+   end
 let _ = main ()
