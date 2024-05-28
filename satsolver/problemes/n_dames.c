@@ -153,12 +153,12 @@ char* contrainte_toutes_diagonales(int n){
 
 void gen_formule_n_dames(int n, char* filename){
     FILE* file = fopen(filename,"w");
-    l_formules = malloc(3*sizeof(char*));
+    char** l_formules = malloc(3*sizeof(char*));
     l_formules[0] = contrainte_toutes_lignes(n);
     l_formules[1] = contrainte_toutes_colonnes(n);
     l_formules[2] = contraintes_toutes_diagonales(n);
     char* formule = toutes_vraies(l_formules,3);
-    fprintf(f,"%s",formule);
+    fprintf(file,"%s",formule);
 }
 
 int main(int argc, char** argv){
