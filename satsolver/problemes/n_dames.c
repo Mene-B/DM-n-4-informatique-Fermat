@@ -156,7 +156,7 @@ void gen_formule_n_dames(int n, char* filename){
     char** l_formules = malloc(3*sizeof(char*));
     l_formules[0] = contrainte_toutes_lignes(n);
     l_formules[1] = contrainte_toutes_colonnes(n);
-    l_formules[2] = contraintes_toutes_diagonales(n);
+    l_formules[2] = contrainte_toutes_diagonales(n);
     char* formule = toutes_vraies(l_formules,3);
     fprintf(file,"%s",formule);
 }
