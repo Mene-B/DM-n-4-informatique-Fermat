@@ -87,6 +87,17 @@ char* au_plus_une(char** l, int n){
     int k = 0; // indice dans l_inter
     int i = 0; // indice de f1
     int j = 0; // indice de f2
+    if(n == 1){
+        char** deux_formules = malloc(2*sizeof(char*));
+        deux_formules[0]=l[0]; 
+        deux_formules[1]=non(l[0]); 
+        char* res = au_moins_une(deux_formules, 2);
+        free(deux_formules[0]);
+        free(deux_formules[1]);
+        free(deux_formules);
+        
+        return res;
+    }
     while (i<n-1){
         j=i+1;
         while(j<n){
