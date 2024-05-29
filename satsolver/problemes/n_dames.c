@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "n_dames.h"
 #include "utils.h"
 
 
@@ -150,15 +149,41 @@ char* contrainte_toutes_diagonales(int n){
     return res;
 }
 
-
 void gen_formule_n_dames(int n, char* filename){
     FILE* file = fopen(filename,"w");
     char** l_formules = malloc(3*sizeof(char*));
     l_formules[0] = contrainte_toutes_lignes(n);
+    printf("%s\n LIGNES\n", l_formules[0]);
     l_formules[1] = contrainte_toutes_colonnes(n);
+    printf("%s\n COLONNES\n", l_formules[1]);
     l_formules[2] = contrainte_toutes_diagonales(n);
+    printf("%s\n DIAGONALES\n", l_formules[2]);
     char* formule = toutes_vraies(l_formules,3);
     fprintf(file,"%s",formule);
+}
+
+
+void tests(){
+    assert(strcmp("X_45_155",variable(45, 155)) == 0);
+    assert(strcmp("X_33_0",variable(33, 0)) == 0);
+    printf("Tous les tests ont réussi !!\n\n");
+    int n = 4;
+	char** l = malloc(n*sizeof(char*));
+	for (int i = 0; i < n; i++){
+		l[i] = malloc(5*sizeof(char));
+		l[i][0] = '(';
+		l[i][1] = 'a';
+		l[i][2] = '&';
+		l[i][3] = 'b';
+		l[i][4] = ')';
+	}
+	char* f = au_moins_une(l, n);
+	assert(strcmp(f,"((a&b)|(a&b)|(a&b)|(a&b))") == 0);
+	free(f);
+	for (int i = 0; i < n; i++){
+		free(l[i]);
+	}
+	free(l);
 }
 
 int main(int argc, char** argv){
@@ -175,6 +200,6 @@ int main(int argc, char** argv){
         n+=(argv[1][i]-'0')*p;
         p=10*p;
     }
-    // gen_formule_n_dames(n,file_out);
+    gen_formule_n_dames(n,file_out);
     printf("fichier %s créé\n", file_out);
 }
