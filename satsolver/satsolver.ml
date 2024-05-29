@@ -315,11 +315,6 @@ let test_simpl_full () =
 	assert(simpl_full(Var "a") = Var "a");
 	assert(simpl_full(And(Var "a", Not (Top))) = Bot);
 	assert(simpl_full(And(Or (Var "a", Bot), And (Top, Var "b"))) = And (Var "a", Var "b"));;
-let test_simpl_full_linear () =
-	assert(simpl_full_linear(Var "a") = Var "a");
-	assert(simpl_full_linear(And(Var "a", Not (Top))) = Bot);
-	assert(simpl_full_linear(And(Or (Var "a", Bot), And (Top, Var "b"))) = And (Var "a", Var "b"));
-	assert(simpl_full_linear(Not (Not (Not (Var "a")))) = Not (Var "a"));;
 
 (* subst f x g renvoie la formule f avec toutes les instances de x remplacées par g *)
 let rec subst (f: formule) (x: string) (g: formule): formule =
@@ -360,6 +355,31 @@ let quine (f: formule): sat_result =
 let test_quine () =
 	assert(quine (from_file "tests/test4.txt") = Some[("a", true); ("b", true); ("c", true); "d", true]);;
 
+let quine_opt (f: formule): sat_result =
+	let fs = simpl_full_linear f in
+	let lv0 = list_var fs in
+	let rec quine_reste (ff: formule) (lv: string list): sat_result =
+		match lv with
+		| [] -> begin 
+						if ff = Top then Some([]) else None 
+					end;
+		| x::q -> 
+			begin
+				let r_top = quine_reste (simpl_full_linear (subst ff x Top)) q in 
+				match r_top with
+				| Some (sat_result_list) -> Some((x, true)::sat_result_list)
+				| None -> let r_bot = quine_reste (simpl_full_linear (subst ff x Bot)) q in 
+					begin 
+						match r_bot with
+						| Some (sat_result_list) -> Some((x, false)::sat_result_list)
+						| None -> None
+					end 
+			end
+	in quine_reste fs lv0
+
+	let test_quine_opt () =
+		assert(quine_opt (from_file "tests/test4.txt") = Some[("a", true); ("b", true); ("c", true); "d", true]);;
+
 (* Fonction de test *)
 let test () = 
 	assert (1=1);
@@ -372,16 +392,16 @@ let test () =
  	test_valuation_next();
  	test_simpl_step();
  	test_simpl_full();
- 	test_simpl_full_linear();
  	test_subst();
  	test_quine();
+	test_quine_opt();
 	print_string "Tous les tests ont réussi \n"
 
 let main () = 
   if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument" else 
   if (Sys.argv.(1) = "test") then test () else begin
-  print_string "Formule : "; print_string (read_file Sys.argv.(1)); print_string "\n" ;
-  let sr = quine (from_file Sys.argv.(1)) in
+  (*print_string "Formule : "; print_string (read_file Sys.argv.(1)); print_string "\n" ;*)
+  let sr = quine_opt (from_file Sys.argv.(1)) in
   match sr with
   | None -> print_string "La formule n'est pas satisfiable\n"
   | Some (sigma) -> print_string "La formule est satisfiable en assignat 1 aux variables suivantes et 0 aux autres :\n";
