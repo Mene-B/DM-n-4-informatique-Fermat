@@ -290,8 +290,18 @@ let rec simpl_full_linear (f: formule): formule =
 	| Not (Not (f1)) -> simpl_full_linear f1
 	| Not (Top) -> Bot
 	| Not (Bot) -> Top
-	| And (f1, f2) -> simpl_full_linear (And(simpl_full_linear f1, simpl_full_linear f2))
-	| Or (f1, f2) -> simpl_full_linear (Or(simpl_full_linear f1, simpl_full_linear f2))
+	| And (f1, f2) -> let f3 = And(simpl_full_linear f1, simpl_full_linear f2) in begin
+			match f3 with 
+			| And (Top, f4) | And (f4, Top) -> f4
+			| And (Bot, f4) | And (f4, Bot) -> Bot
+			| _ -> f3
+		end
+	| Or (f1, f2) -> let f3 = Or(simpl_full_linear f1, simpl_full_linear f2)in begin
+			match f3 with
+			| Or (Bot, f4) | Or (f4, Bot) -> f4
+			| Or (Top, f4) | Or (f4, Top) -> Top
+			| _ -> f3
+		end
 	| Not (f1) -> simpl_full_linear(Not(simpl_full_linear f1))
 	| f1 -> f1
 (* Tests *)
@@ -299,6 +309,10 @@ let test_simpl_full () =
 	assert(simpl_full(Var "a") = Var "a");
 	assert(simpl_full(And(Var "a", Not (Top))) = Bot);
 	assert(simpl_full(And(Or (Var "a", Bot), And (Top, Var "b"))) = And (Var "a", Var "b"));;
+let test_simpl_full_linear () =
+	assert(simpl_full_linear(Var "a") = Var "a");
+	assert(simpl_full_linear(And(Var "a", Not (Top))) = Bot);
+	assert(simpl_full_linear(And(Or (Var "a", Bot), And (Top, Var "b"))) = And (Var "a", Var "b"));;
 
 (* subst f x g renvoie la formule f avec toutes les instances de x remplacées par g *)
 let rec subst (f: formule) (x: string) (g: formule): formule =
@@ -351,6 +365,7 @@ let test () =
  	test_valuation_next();
  	test_simpl_step();
  	test_simpl_full();
+ 	test_simpl_full_linear();
  	test_subst();
  	test_quine();
 	print_string "Tous les tests ont réussi \n"
