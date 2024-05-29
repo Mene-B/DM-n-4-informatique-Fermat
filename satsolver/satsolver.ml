@@ -302,7 +302,13 @@ let rec simpl_full_linear (f: formule): formule =
 			| Or (Top, f4) | Or (f4, Top) -> Top
 			| _ -> f3
 		end
-	| Not (f1) -> simpl_full_linear(Not(simpl_full_linear f1))
+	| Not (f1) -> let f2 = Not(simpl_full_linear f1) in begin
+			match f2 with
+			| Not(Not (f3)) -> f3
+			| Not(Top) -> Bot
+			| Not(Bot) -> Top
+			| f3 -> f3
+	end
 	| f1 -> f1
 (* Tests *)
 let test_simpl_full () =
@@ -312,7 +318,8 @@ let test_simpl_full () =
 let test_simpl_full_linear () =
 	assert(simpl_full_linear(Var "a") = Var "a");
 	assert(simpl_full_linear(And(Var "a", Not (Top))) = Bot);
-	assert(simpl_full_linear(And(Or (Var "a", Bot), And (Top, Var "b"))) = And (Var "a", Var "b"));;
+	assert(simpl_full_linear(And(Or (Var "a", Bot), And (Top, Var "b"))) = And (Var "a", Var "b"));
+	assert(simpl_full_linear(Not (Not (Not (Var "a")))) = Not (Var "a"));;
 
 (* subst f x g renvoie la formule f avec toutes les instances de x remplacées par g *)
 let rec subst (f: formule) (x: string) (g: formule): formule =
