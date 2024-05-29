@@ -17,7 +17,7 @@ char* au_moins_une(char** l, int n){
 	while (i < (taille_somme + n)) {
 		if (j >= strlen(l[k])){
 			// Un string a été totalement parcouru (on a écrit une condition entière)
-			// On passe au string suivant et on rajoute '|' pour la conjonction
+			// On passe au string suivant et on rajoute '|' pour la disjonction
 			k++;
 			j = 0;
 			f[i] = '|';
@@ -49,7 +49,7 @@ char* toutes_vraies(char** l, int n){
 	while (i < (taille_somme + n)) {
 		if (j >= strlen(l[k])){
 			// Un string a été totalement parcouru (on a écrit une condition entière)
-			// On passe au string suivant et on rajoute '|' pour la conjonction
+			// On passe au string suivant et on rajoute '&' pour la conjonction
 			k++;
 			j = 0;
 			f[i] = '&';
