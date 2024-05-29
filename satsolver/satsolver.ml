@@ -187,7 +187,7 @@ let test_add_one() =
 	assert(add_one [true;true;true] = [false;false;false;true]) 
 
 
-(* Fonction intermédiaire qui renvoie la valeur de l avariable var dans la valuation s *)
+(* Fonction intermédiaire qui renvoie la valeur de la variable var dans la valuation s *)
 let rec find_val (s: valuation) (var: string) : bool = 
 	match s with 
 	| x::q -> let (z, b) = x in
@@ -212,7 +212,7 @@ let test_interprete () =
 
 
 (* Renvoie la valuation suivant de v. Si v est la val max, renvoie None*)
-let valuation_next (v : valuation) : valuation option= 
+let valuation_next (v : valuation) : valuation option = 
 	let rec aux (v : valuation): valuation*bool = 
 	match v with 
 	| [] -> ([],true)
@@ -237,7 +237,7 @@ let test_valuation_init () =
 	assert (valuation_init ["a"; "b"; "c"] = [("a",false);("b",false);("c",false)]);;
 
 
-(* Type sat_result qui permet de différencier le cas où la formule n'est pas satisfiable (None) ou l'est par la valusation sigma (Some(sigma)) *)
+(* Type sat_result qui permet de différencier le cas où la formule n'est pas satisfiable (None) ou l'est par la valuation sigma (Some(sigma)) *)
 type sat_result = valuation option
 
 
@@ -257,7 +257,7 @@ let test_sat_solver_naif () =
 	assert(sat_solver_naif (from_file "tests/test5.txt") = None);
  	assert(sat_solver_naif (from_file "tests/test6.txt") = Some [("a",true);("b",false);("c",false)]);;
 
-(* sipmle_step f renvoie un couple composé de f avec une étape de simplification suplémentaire
+(* simple_step f renvoie un couple composé de f avec une étape de simplification supplémentaire
  (si c'est possible) et un booléen indiquant si une étape a été éffectuée *)
 let rec simpl_step (f: formule): (formule * bool) = 
 	match f with
@@ -409,6 +409,6 @@ let main () =
   		match sigma with
   		| [] -> print_string ""
   		| (s, b)::q -> (if b then (print_string s; print_string "\n")) ; print_var q
-  	in print_var sigma
+  	in print_var sigma ; print_string "\n"
    end
 let _ = main ()
