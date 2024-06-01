@@ -354,43 +354,28 @@ let quine (f: formule): sat_result =
 	in quine_reste fs lv0
 (* Tests *)
 let test_quine () =
-	assert(quine (from_file "tests/test4.txt") = Some[("a", true); ("b", true); ("c", true); "d", true]);;
+assert(quine (from_file "tests/test4.txt") = Some[("a", true); ("b", true); ("c", true); "d", true]);;
 
 let quine_opt (f: formule): sat_result =
 	let lv0 = list_var f in
+	let rec quine_reste (ff: formule) (lv: string list) (valu: valuation): sat_result =
+	let f_simpl = simpl_full_linear ff in 
+	if f_simpl = Top then Some(valu) else 
+		if f_simpl = Bot then None 
+		else 
+	match lv with
+	| [] -> None 
+	| x::q -> 
+		begin
+			let r_top = quine_reste (subst f_simpl x Top) q ((x,true)::valu) in 
+			match r_top with
+			| Some (sat_result_list) -> Some(sat_result_list)
+			| None -> quine_reste (subst f_simpl x Bot) q ((x, false)::valu)
+		end
+	in quine_reste f lv0 []
 
-	let rec print_liste (l : string list) : unit = 
-		match l with 
-		| [] -> ();
-		| x::q -> 
-			print_string x;
-			print_liste q in
-
-	let rec quine_reste (ff: formule) (lv: string list): sat_result =
-		let f_simpl = simpl_full_linear ff 0 in 
-		if f_simpl = Top then Some([]) else 
-			if f_simpl = Bot then None 
-			else 
-		match lv with
-		| [] -> begin 
-						if f_simpl = Top then Some([]) else None 
-					end;
-		| x::q -> 
-			begin
-				let r_top = quine_reste (subst f_simpl x Top) q in 
-				match r_top with
-				| Some (sat_result_list) -> Some((x, true)::sat_result_list)
-				| None -> let r_bot = quine_reste (subst f_simpl x Bot) q in 
-					begin 
-						match r_bot with
-						| Some (sat_result_list) -> Some((x, false)::sat_result_list)
-						| None -> None
-					end 
-			end
-	in quine_reste f lv0
-
-	let test_quine_opt () =
-		assert(quine_opt (from_file "tests/test4.txt") = Some[("a", true); ("b", true); ("c", true); "d", true]);;
+let test_quine_opt () =
+	assert(quine_opt (from_file "tests/test4.txt") = Some[("a", true); ("b", true); ("c", true); "d", true]);;
 
 (* Fonction de test *)
 let test () = 
