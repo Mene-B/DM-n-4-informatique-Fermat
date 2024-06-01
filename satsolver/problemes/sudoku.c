@@ -36,11 +36,11 @@ char* variable(int k, int i, int j){
 }
 
 char* contrainte_une_case(int i, int j, int n){
-    char** tab = malloc(n*sizeof(char*));
-    for (int l = 0; l<n; l++){
+    char** tab = malloc(n*n*sizeof(char*));
+    for (int l = 0; l<n*n; l++){
         tab[l] = variable(l+1,i,j);
     }
-    char* res = au_moins_une(tab,n);
+    char* res = au_moins_une(tab,n*n);
     free(tab);
     return res;
 }
@@ -93,7 +93,7 @@ char* contrainte_une_colonne_un_chiffre(int k, int j, int n){
     for(int i = 0; i < n*n; i++){
         tab[i] = variable(k, i, j);
     }
-    char* au_moins = au_moins_une(tab, n);
+    char* au_moins = au_moins_une(tab, n*n);
 
     return au_moins;
 }
@@ -110,15 +110,45 @@ char* contrainte_toutes_colonnes(int n){
     return res;
 }
 
-// char* contrainte_un_carre_un_chiffre(int k, int i, int j, int n){
-//     char** tab = malloc(n*sizeof(char*));
-//     for(int i = 0; i < n; i++){
-//         tab[i] = variable(k, i, j);
-//     }
-//     char* au_moins = au_moins_une(tab, n);
+char* contrainte_un_carre_un_chiffre(int k, int i, int j, int n){
+    char** tab = malloc(n*n*sizeof(char*));
+    for(int ii = 0; ii < n; ii++){
+        for (int jj = 0; jj < n; jj++){
+            tab[n*ii+jj] = variable(k, n*i+ii, n*j+jj);
+        }
+    }
+    char* au_moins = au_moins_une(tab, n*n);
+    free(tab);
+    return au_moins;    
+}
 
-//     return au_moins;    
-// }
+char* contrainte_tous_carres(int n){
+    char** tab = malloc(n*n*n*n*sizeof(char*));
+    for (int k = 0; k<n*n; k++){
+        for (int i = 0; i<n; i++){
+            for (int j = 0; j<n; j++){
+                tab[n*n*k+n*i+j] = contrainte_un_carre_un_chiffre(k+1,i,j,n);
+            }
+        }
+    }
+    char* res = toutes_vraies(tab,n*n*n*n);
+    free(tab);
+    return res;
+}
+
+void gen_formule_n_sudoku(int n, char* filename){
+    FILE* f = fopen(filename, "w");
+    char** tab = malloc(4*sizeof(char*));
+    tab[0] = contrainte_toutes_cases(n);
+    tab[1] = contrainte_toutes_lignes(n);
+    tab[2] = contrainte_toutes_colonnes(n);
+    tab[3] = contrainte_tous_carres(n);
+
+    char* res = toutes_vraies(tab,n);
+    free(tab);
+    fprintf(f,"%s",res);
+}
+
 
 void test(){
     // printf("%s",contrainte_une_case(0,0,6));
@@ -127,8 +157,11 @@ void test(){
     // printf("%s", contrainte_toutes_lignes(2));
     // printf("%s", contrainte_une_colonne_un_chiffre(1,2,5));
     printf("%s", contrainte_toutes_colonnes(2));
+    // printf("%s", contrainte_un_carre_un_chiffre(2,1,1,2));
+    // printf("%s", contrainte_tous_carres(2));
 }
 
 int main(){
     test();
+    // gen_formule_n_sudoku(2,"2_sudoku.txt");
 }
