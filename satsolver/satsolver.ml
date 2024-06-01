@@ -96,7 +96,7 @@ let parse (s: string) : formule =
 			| _ -> raise Erreur_syntaxe
 	in parse_aux 0 (String.length s -1)
 
-(* Renvoie une formule construire à partir du contenu du fichier fn.
+(* Renvoie une formule construire à partir du contenu du fichier filename.
    Lève une exception Erreur_syntaxe si le contenu du fichier n'est pas une formule valide.
    Lève une exception Sys_error(message_erreur) si le nom du fichier n'est pas valide. *)
 let from_file (filename: string) : formule = 
@@ -187,7 +187,7 @@ let test_add_one() =
 	assert(add_one [true;true;true] = [false;false;false;true]) 
 
 
-(* Fonction intermédiaire qui renvoie la valeur de la variable var dans la valuation s *)
+(* Fonction intermédiaire qui renvoie la valeur de l avariable var dans la valuation s *)
 let rec find_val (s: valuation) (var: string) : bool = 
 	match s with 
 	| x::q -> let (z, b) = x in
@@ -212,7 +212,7 @@ let test_interprete () =
 
 
 (* Renvoie la valuation suivant de v. Si v est la val max, renvoie None*)
-let valuation_next (v : valuation) : valuation option = 
+let valuation_next (v : valuation) : valuation option= 
 	let rec aux (v : valuation): valuation*bool = 
 	match v with 
 	| [] -> ([],true)
@@ -237,7 +237,7 @@ let test_valuation_init () =
 	assert (valuation_init ["a"; "b"; "c"] = [("a",false);("b",false);("c",false)]);;
 
 
-(* Type sat_result qui permet de différencier le cas où la formule n'est pas satisfiable (None) ou l'est par la valuation sigma (Some(sigma)) *)
+(* Type sat_result qui permet de différencier le cas où la formule n'est pas satisfiable (None) ou l'est par la valusation sigma (Some(sigma)) *)
 type sat_result = valuation option
 
 
@@ -257,7 +257,7 @@ let test_sat_solver_naif () =
 	assert(sat_solver_naif (from_file "tests/test5.txt") = None);
  	assert(sat_solver_naif (from_file "tests/test6.txt") = Some [("a",true);("b",false);("c",false)]);;
 
-(* simple_step f renvoie un couple composé de f avec une étape de simplification supplémentaire
+(* sipmle_step f renvoie un couple composé de f avec une étape de simplification suplémentaire
  (si c'est possible) et un booléen indiquant si une étape a été éffectuée *)
 let rec simpl_step (f: formule): (formule * bool) = 
 	match f with
@@ -282,27 +282,28 @@ let rec simpl_full (f: formule): formule =
 	let (fs, b) = simpl_step f in 
 	if b then simpl_full fs else fs
 (* La même fonction mais en une compléxité linaire en la taille de la formule *)
-let rec simpl_full_linear (f: formule): formule =
+let rec simpl_full_linear (f: formule) (n : int): formule =
+	(*print_int n;*)
 	match f with
-	| And (Top, f1) | And (f1, Top) | Or (Bot, f1) | Or (f1, Bot) -> simpl_full_linear f1
 	| And (Bot, f1) | And (f1, Bot) -> Bot
 	| Or (Top, f1) | Or (f1, Top) -> Top
-	| Not (Not (f1)) -> simpl_full_linear f1
 	| Not (Top) -> Bot
 	| Not (Bot) -> Top
-	| And (f1, f2) -> let f3 = And(simpl_full_linear f1, simpl_full_linear f2) in begin
+	| And (Top, f1) | And (f1, Top) | Or (Bot, f1) | Or (f1, Bot) -> simpl_full_linear f1 (n+1)
+	| Not (Not (f1)) -> simpl_full_linear f1 (n+1)
+	| And (f1, f2) -> let f3 = And(simpl_full_linear f1 (n+1), simpl_full_linear f2 (n+1)) in begin
 			match f3 with 
 			| And (Top, f4) | And (f4, Top) -> f4
 			| And (Bot, f4) | And (f4, Bot) -> Bot
 			| _ -> f3
 		end
-	| Or (f1, f2) -> let f3 = Or(simpl_full_linear f1, simpl_full_linear f2)in begin
+	| Or (f1, f2) -> let f3 = Or(simpl_full_linear f1 (n+1), simpl_full_linear f2 (n+1))in begin
 			match f3 with
 			| Or (Bot, f4) | Or (f4, Bot) -> f4
 			| Or (Top, f4) | Or (f4, Top) -> Top
 			| _ -> f3
 		end
-	| Not (f1) -> let f2 = Not(simpl_full_linear f1) in begin
+	| Not (f1) -> let f2 = Not(simpl_full_linear f1 (n+1)) in begin
 			match f2 with
 			| Not(Not (f3)) -> f3
 			| Not(Top) -> Bot
@@ -356,26 +357,37 @@ let test_quine () =
 	assert(quine (from_file "tests/test4.txt") = Some[("a", true); ("b", true); ("c", true); "d", true]);;
 
 let quine_opt (f: formule): sat_result =
-	let fs = simpl_full_linear f in
-	let lv0 = list_var fs in
+	let lv0 = list_var f in
+
+	let rec print_liste (l : string list) : unit = 
+		match l with 
+		| [] -> ();
+		| x::q -> 
+			print_string x;
+			print_liste q in
+
 	let rec quine_reste (ff: formule) (lv: string list): sat_result =
+		let f_simpl = simpl_full_linear ff 0 in 
+		if f_simpl = Top then Some([]) else 
+			if f_simpl = Bot then None 
+			else 
 		match lv with
 		| [] -> begin 
-						if ff = Top then Some([]) else None 
+						if f_simpl = Top then Some([]) else None 
 					end;
 		| x::q -> 
 			begin
-				let r_top = quine_reste (simpl_full_linear (subst ff x Top)) q in 
+				let r_top = quine_reste (subst f_simpl x Bot) q in 
 				match r_top with
-				| Some (sat_result_list) -> Some((x, true)::sat_result_list)
-				| None -> let r_bot = quine_reste (simpl_full_linear (subst ff x Bot)) q in 
+				| Some (sat_result_list) -> Some((x, false)::sat_result_list)
+				| None -> let r_bot = quine_reste (subst f_simpl x Top) q in 
 					begin 
 						match r_bot with
-						| Some (sat_result_list) -> Some((x, false)::sat_result_list)
+						| Some (sat_result_list) -> Some((x, true)::sat_result_list)
 						| None -> None
 					end 
 			end
-	in quine_reste fs lv0
+	in quine_reste f lv0
 
 	let test_quine_opt () =
 		assert(quine_opt (from_file "tests/test4.txt") = Some[("a", true); ("b", true); ("c", true); "d", true]);;
@@ -409,6 +421,7 @@ let main () =
   		match sigma with
   		| [] -> print_string ""
   		| (s, b)::q -> (if b then (print_string s; print_string "\n")) ; print_var q
-  	in print_var sigma ; print_string "\n"
+  	in print_var sigma
    end
+
 let _ = main ()
