@@ -3,9 +3,8 @@
 #include <assert.h>
 #include <string.h>
 #include "utils.h"
+#include "n_dames.h"
 
-
-// Renvoie la chaîne de charactères "X_[i]_[j]"
 char* variable(int i, int j){
     // Variables pour stocker les tailles des nombres i et j en base 10
     int taille_i = 0;
@@ -32,7 +31,6 @@ char* variable(int i, int j){
     return str; 
 }
 
-// Renvoie la formule exprimant la contrainte de l'unique dame sur la i-ième ligne 
 char* contrainte_une_ligne(int i, int n){
     // On va stocker toutes les variables de la forme "X_i_j" pour j entre 0 et n-1
     char** tab = malloc(n*sizeof(char*));
@@ -58,7 +56,6 @@ char* contrainte_toutes_lignes(int n){
     return toutes_vraies(tab, n);
 }
 
-// Renvoie la formule exprimant la contrainte de l'unique dame sur la i-ième ligne 
 char* contrainte_une_colonne(int j, int n){
     // On va stocker toutes les variables de la forme "X_i_j" pour j entre 0 et n-1
     char** tab = malloc(n*sizeof(char*));
@@ -78,7 +75,6 @@ char* contrainte_toutes_colonnes(int n){
     return toutes_vraies(tab, n);
 }
 
-// Renvoie la formule exprimant la contrainte sur les diagonales avec une pente positive --> "/"
 char* contrainte_diag_positives(int n){
     char** formule_totale = malloc((2*n - 1)*sizeof(char*));
     for(int d = 0; d < n; d++){
@@ -106,7 +102,6 @@ char* contrainte_diag_positives(int n){
     return res;
 }
 
-// Renvoie la formule exprimant la contrainte sur les diagonales avec une pente négative --> "\"
 char* contrainte_diag_negatives(int n){
     char** formule_totale = malloc((2*n - 1)*sizeof(char*));
     for(int d = 0; d < n; d++){
