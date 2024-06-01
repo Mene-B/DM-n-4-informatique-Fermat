@@ -309,7 +309,7 @@ void gen_formule_n_sudoku(int n, char* filename){
     tab[2] = contrainte_toutes_colonnes(n);
     tab[3] = contrainte_tous_carres(n);
 
-    char* res = toutes_vraies(tab,n);
+    char* res = toutes_vraies(tab,4);
     free(tab);
     fprintf(f,"%s",res);
 }
@@ -327,6 +327,5 @@ void test(){
 }
 
 int main(){
-    test();
-    // gen_formule_n_sudoku(2,"2_sudoku.txt");
+    gen_formule_n_sudoku(2,"2_sudoku.txt");
 }
