@@ -377,13 +377,13 @@ let quine_opt (f: formule): sat_result =
 					end;
 		| x::q -> 
 			begin
-				let r_top = quine_reste (subst f_simpl x Bot) q in 
+				let r_top = quine_reste (subst f_simpl x Top) q in 
 				match r_top with
-				| Some (sat_result_list) -> Some((x, false)::sat_result_list)
-				| None -> let r_bot = quine_reste (subst f_simpl x Top) q in 
+				| Some (sat_result_list) -> Some((x, true)::sat_result_list)
+				| None -> let r_bot = quine_reste (subst f_simpl x Bot) q in 
 					begin 
 						match r_bot with
-						| Some (sat_result_list) -> Some((x, true)::sat_result_list)
+						| Some (sat_result_list) -> Some((x, false)::sat_result_list)
 						| None -> None
 					end 
 			end
