@@ -57,7 +57,7 @@ char* contrainte_toutes_lignes(int n){
 }
 
 char* contrainte_une_colonne(int j, int n){
-    // On va stocker toutes les variables de la forme "X_i_j" pour j entre 0 et n-1
+    // On va stocker toutes les variables de la forme "X_i_j" pour i entre 0 et n-1
     char** tab = malloc(n*sizeof(char*));
     for(int i = 0; i < n; i++){
         tab[i] = variable(i, j);
