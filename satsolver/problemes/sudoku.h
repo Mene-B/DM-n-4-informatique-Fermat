@@ -36,7 +36,7 @@ char* contrainte_tous_carres_un_chiffre(int k, int n);
 char* contrainte_tous_carres(int n);
 
 // Génère la formule exprimant les cases déjà remplies au début
-char* conditions_initiales(char* in);
+char* conditions_initiales(char* in, int nb);
 
 //génère la formule modélisant le problème du sudoku de taille n dans un fichier appelé filename, avec p cases initialement remplies
 void gen_formule_n_sudoku(int n, char* filename, int p);
