@@ -521,7 +521,7 @@ let test () =
 	test_parse();
 	test_add_one();
  	test_interprete();
-  test_sat_solver_naif();
+  	test_sat_solver_naif();
  	test_valuation_init();
  	test_valuation_next();
  	test_simpl_step();
