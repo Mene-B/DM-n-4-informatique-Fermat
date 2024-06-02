@@ -374,7 +374,7 @@ let quine_opt (f: formule): sat_result =
 		end
 	in quine_reste f lv0 []
 
-(* type pour gérer les variables et leur contraire (N) *)
+(* type pour gérer les littéraux i.e. les variables et leur contraire (N) *)
 type litteral =
 	| Y of string
 	| N of string
@@ -395,8 +395,10 @@ let rec clause_D_list_var (f : formule) (fg: formule) (clv_r: litteral list) : l
 	| And (f1, f2) -> None
 	| Or (f1, f2) -> clause_D_list_var f2 (Or (fg, f1)) clv_r
 
-(* fnc f renvoie None si f n'est pas sous FNC, et renvoie Some de la liste des clause conjonctive de f sous la forme d'une litteral list si f est sous FNC*)
-(* Le bool détermine si fg est important *)
+(* fnc f renvoie None si f n'est pas sous FNC, et renvoie Some de la liste des clause conjonctive de f sous la forme d'une litteral list list si f est sous FNC*)
+(* fg permet à la fonction d'être récurrsive terminale car : fnc (And (A, And (b,c))) = fnc (And (And (a,b), c)). Pour pouvoir rester linéaire en la taille totale 
+	de l'arbre de la formule *)
+(* Le bool détermine si fg est important (pour éviter une boucle infinie) *)
 let rec fnc (f: formule) (fg : formule) (l_ll : litteral list list) (b: bool): litteral list list option =
 	match f with
 	| And (Top, f1) | And (f1, Top) -> fnc f1 Top l_ll false
@@ -413,6 +415,9 @@ let rec fnc (f: formule) (fg : formule) (l_ll : litteral list list) (b: bool): l
 	| Top -> if b then fnc fg Top l_ll false else Some (l_ll)
 	| Bot -> fnc fg Top l_ll false
 	| Not (f1) -> None
+
+(* Paquet de fonction servant à l'étape de simplification de quine sous FNC (non utilisées ici car remplacées par simpl_toutes_clauses qui fait tout d'un coup 
+		et donc qui gagne en complexité (en divisant le temps par ~2)) *)
 
 (* Détermine si l est dans l_l *)
 let rec est_dans_clause (l_l: litteral list) (l: litteral): bool =
@@ -438,7 +443,9 @@ let rec suppr_de_clause (l_ll: litteral list list) (l : litteral) (l_ll_verifies
 	| [] -> l_ll_verifies
 	| l_l::q -> suppr_de_clause q l (suppr_dans_clause l_l l []::l_ll_verifies)
 
-(* Détermine si l ne contient que des liste vides *)
+
+
+(* Détermine si l contient une liste vide *)
 let rec contient_clause_vide (l: 'a list list): bool =
 	match l with 
 	| []::q -> true
@@ -446,40 +453,45 @@ let rec contient_clause_vide (l: 'a list list): bool =
  	| [] -> false
 
 
-
-(*
-let rec occ (lcd: litteral list list) (lv: string list) (res_i: int list) (res_l: litteral list list): int list =
-	match lv with
-	| [] -> res_i
-	| s::q -> 
-	begin 
-		let rec aux_occ (l_l: litteral list) (ss: string) (r_int: int) (r_list: litteral list) =
-		match l_l with
-		| [] -> (r_int, r_list)
-		| l::qqq -> 
-		begin
-			match l with 
-			| N s1 | Y s1 -> if s1 = ss then aux_occ qqq ss (r_int + 1) r_list else aux_occ qqq ss r_int (l::r_list)
-		end
-		in match lcd with 
-		| [] -> occ res_l q res_i []
-		| l_l::qq -> let (entier, liste) = aux_occ l_l s 0 [] in occ qq lv (entier::res_i) (liste::res_l)
+(* Fonction effectuant l'étape de simplification pour quine_fnc, consitant à supprimer chaque clause contenant l et chaque non l des clauses qui le contiennent
+	où l_ll est la liste de liste de littéraux (cf quine), l le littéral à tester et l_ll_verifies un accumulateur composé de la liste qui a été testé et qui doit être gardée *)
+let rec simpl_toutes_clause (l_ll: litteral list list) (l: litteral) (l_ll_verifies: litteral list list): litteral list list =
+	match l_ll with 
+	| [] -> l_ll_verifies 
+	| l_l::q -> 
+	begin
+		(* Fonction auxiliaire qui effectue une simplification à une clause disjonctive de la formule en l'enlevant (None) si elle contient aux_l (le littéral à tester) 
+			et enlevant le littéral non l si il apparaît *)
+		let rec simpl_clause (aux_l_l: litteral list) (aux_l: litteral) (aux_l_l_verifies: litteral list): litteral list option =
+		match aux_l_l with
+		| [] -> Some (aux_l_l_verifies)
+		| x::q -> 
+		begin 
+			match (x,l) with
+			| (N s1, N s2) | (Y s1, Y s2) -> if s1 = s2 then None else simpl_clause q aux_l (x::aux_l_l_verifies) (* Si aux_l_l contient aux_l *)
+			| (N s1, Y s2) | (Y s1, N s2) -> if s1 = s2 then simpl_clause q aux_l aux_l_l_verifies else simpl_clause q aux_l (x::aux_l_l_verifies) (* Si aux_l_l contient non aux_l *)
+		end in let r_clause = simpl_clause l_l l [] in 
+		match r_clause with 
+		| None -> simpl_toutes_clause q l l_ll_verifies (* La clause a été retirée *)
+		| Some (l_ll1) -> simpl_toutes_clause q l (l_ll1::l_ll_verifies) (* On rajoute la clause modifiée (ou non) à celles déjà vues *)
 	end
-*)
 
+(* Algorithme de quine pour les formules sous FNC, où lcd est une liste de liste de littéraux où chaque liste de littéraux représente une clause disjonctive
+	de la formule à vérifier, llvv est la liste des variables de la formule et valu_r est un accumulateur pour se souvenir de la valuation testée *)
 let rec quine_fnc (lcd: litteral list list) (llvv: string list) (valu_r: valuation): sat_result =
-			if contient_clause_vide lcd then None else
-			if lcd = [] then Some(valu_r) else
-			match llvv with
-			| [] -> None
-			| s::q ->
-			begin 
-				let s_bot = quine_fnc (suppr_de_clause (suppr_clause lcd (N (s)) []) (Y (s)) []) q ((s, false)::valu_r) in 
-				match s_bot with
-				| Some (valuation) -> Some (valuation)
-				| None -> quine_fnc (suppr_de_clause (suppr_clause lcd (Y (s)) []) (N (s)) []) q ((s, true)::valu_r)
-			end
+	if contient_clause_vide lcd then None else
+	if lcd = [] then Some(valu_r) else
+	match llvv with
+	| [] -> None
+	| s::q ->
+	begin 
+		let s_bot = quine_fnc (simpl_toutes_clause lcd (N (s)) []) q ((s, false)::valu_r) in 
+		match s_bot with
+		| Some (valuation) -> Some (valuation)
+		| None -> quine_fnc (simpl_toutes_clause lcd (Y (s)) []) q ((s, true)::valu_r)
+	end
 
+(* Quine optimisé pour prendre en compte les formules sous FNC *)
 let quine_opt_FNC (f: formule): sat_result =
 	let lv0 = list_var f in
 	let rec quine_reste (ff: formule) (lv: string list) (valu: valuation): sat_result =
