@@ -14,8 +14,7 @@ char* variable(int k, int i, int j){
     if(i == 0){
         taille_i = 1;
     } else while(I != 0){
-        I = (int) (I/10);#include "sudoku.h"
-#include "utils.h"
+        I = (int) (I/10);
 
 char* variable(int k, int i, int j){
     // Variables pour stocker les tailles des nombres i et j en base 10
@@ -326,7 +325,7 @@ void test(){
     // printf("%s", contrainte_tous_carres(2));
 }
 
-int main(){
+int main(int argc, char** argv){
     test();
     assert(argc == 2);
 

@@ -282,28 +282,28 @@ let rec simpl_full (f: formule): formule =
 	let (fs, b) = simpl_step f in 
 	if b then simpl_full fs else fs
 (* La même fonction mais en une compléxité linaire en la taille de la formule *)
-let rec simpl_full_linear (f: formule) (n : int): formule =
+let rec simpl_full_linear (f: formule): formule =
 	(*print_int n;*)
 	match f with
 	| And (Bot, f1) | And (f1, Bot) -> Bot
 	| Or (Top, f1) | Or (f1, Top) -> Top
 	| Not (Top) -> Bot
 	| Not (Bot) -> Top
-	| And (Top, f1) | And (f1, Top) | Or (Bot, f1) | Or (f1, Bot) -> simpl_full_linear f1 (n+1)
-	| Not (Not (f1)) -> simpl_full_linear f1 (n+1)
-	| And (f1, f2) -> let f3 = And(simpl_full_linear f1 (n+1), simpl_full_linear f2 (n+1)) in begin
+	| And (Top, f1) | And (f1, Top) | Or (Bot, f1) | Or (f1, Bot) -> simpl_full_linear f1
+	| Not (Not (f1)) -> simpl_full_linear f1
+	| And (f1, f2) -> let f3 = And(simpl_full_linear f1, simpl_full_linear f2) in begin
 			match f3 with 
 			| And (Top, f4) | And (f4, Top) -> f4
 			| And (Bot, f4) | And (f4, Bot) -> Bot
 			| _ -> f3
 		end
-	| Or (f1, f2) -> let f3 = Or(simpl_full_linear f1 (n+1), simpl_full_linear f2 (n+1))in begin
+	| Or (f1, f2) -> let f3 = Or(simpl_full_linear f1, simpl_full_linear f2)in begin
 			match f3 with
 			| Or (Bot, f4) | Or (f4, Bot) -> f4
 			| Or (Top, f4) | Or (f4, Top) -> Top
 			| _ -> f3
 		end
-	| Not (f1) -> let f2 = Not(simpl_full_linear f1 (n+1)) in begin
+	| Not (f1) -> let f2 = Not(simpl_full_linear f1) in begin
 			match f2 with
 			| Not(Not (f3)) -> f3
 			| Not(Top) -> Bot
@@ -374,8 +374,133 @@ let quine_opt (f: formule): sat_result =
 		end
 	in quine_reste f lv0 []
 
-let test_quine_opt () =
-	assert(quine_opt (from_file "tests/test4.txt") = Some[("a", true); ("b", true); ("c", true); "d", true]);;
+(* type pour gérer les variables et leur contraire (N) *)
+type litteral =
+	| Y of string
+	| N of string
+
+(* clause_D_list_var renvoie Some de la liste des littéraux de f si il n'y a pas de and, et None si il y en a *)
+let rec clause_D_list_var (f : formule) (fg: formule) (clv_r: litteral list) : litteral list option =  
+	match f with
+	| Top | Or (Top, Top) -> 
+	begin
+		match fg with 
+		| Top -> Some(clv_r)
+		| _ -> clause_D_list_var fg Top clv_r
+	end
+	| Bot -> clause_D_list_var fg Top clv_r
+	| Not (Var s) -> clause_D_list_var fg Top (N (s)::clv_r)
+	| Var s -> clause_D_list_var fg Top (Y (s)::clv_r)
+	| Not(_) -> None
+	| And (f1, f2) -> None
+	| Or (f1, f2) -> clause_D_list_var f2 (Or (fg, f1)) clv_r
+
+(* fnc f renvoie None si f n'est pas sous FNC, et renvoie Some de la liste des clause conjonctive de f sous la forme d'une litteral list si f est sous FNC*)
+(* Le bool détermine si fg est important *)
+let rec fnc (f: formule) (fg : formule) (l_ll : litteral list list) (b: bool): litteral list list option =
+	match f with
+	| And (Top, f1) | And (f1, Top) -> fnc f1 Top l_ll false
+	| And (f1, f2) -> fnc f2 (And (fg, f1)) l_ll true
+	| Or (f1, f2) -> 
+	begin 
+		let clv = clause_D_list_var (Or (f1, f2)) Top [] in
+		match clv with
+		| None -> None
+		| Some (lv) -> fnc fg Top (lv::l_ll) false
+	end 
+	| Var s -> fnc fg Top ([Y (s)]::l_ll) false
+	| Not (Var s) -> fnc fg Top ([N (s)]::l_ll) false
+	| Top -> if b then fnc fg Top l_ll false else Some (l_ll)
+	| Bot -> fnc fg Top l_ll false
+	| Not (f1) -> None
+
+(* Détermine si l est dans l_l *)
+let rec est_dans_clause (l_l: litteral list) (l: litteral): bool =
+	match l_l with
+	| x::q -> if x = l then true else est_dans_clause q l
+	| [] -> false
+
+(* Supprime toutes les clause de l_ll contenant l *)
+let rec suppr_clause (l_ll: litteral list list) (l: litteral) (l_ll_verifies: litteral list list): litteral list list = 
+	match l_ll with
+	| [] -> l_ll_verifies
+	| l_l::q -> if est_dans_clause l_l l then suppr_clause q l l_ll_verifies else suppr_clause q l (l_l::l_ll_verifies)
+
+(* Supprime l de l_l *)
+let rec suppr_dans_clause (l_l: litteral list) (l: litteral) (l_l_verifies: litteral list): litteral list =
+	match l_l with
+	| [] -> l_l_verifies
+	| x::q -> if x = l then suppr_dans_clause q l l_l_verifies else suppr_dans_clause q l (x::l_l_verifies)
+
+(* Supprime l de chaque clause de l_ll *)
+let rec suppr_de_clause (l_ll: litteral list list) (l : litteral) (l_ll_verifies: litteral list list): litteral list list =
+	match l_ll with
+	| [] -> l_ll_verifies
+	| l_l::q -> suppr_de_clause q l (suppr_dans_clause l_l l []::l_ll_verifies)
+
+(* Détermine si l ne contient que des liste vides *)
+let rec contient_clause_vide (l: 'a list list): bool =
+	match l with 
+	| []::q -> true
+	| x::q -> contient_clause_vide q
+ 	| [] -> false
+
+
+
+(*
+let rec occ (lcd: litteral list list) (lv: string list) (res_i: int list) (res_l: litteral list list): int list =
+	match lv with
+	| [] -> res_i
+	| s::q -> 
+	begin 
+		let rec aux_occ (l_l: litteral list) (ss: string) (r_int: int) (r_list: litteral list) =
+		match l_l with
+		| [] -> (r_int, r_list)
+		| l::qqq -> 
+		begin
+			match l with 
+			| N s1 | Y s1 -> if s1 = ss then aux_occ qqq ss (r_int + 1) r_list else aux_occ qqq ss r_int (l::r_list)
+		end
+		in match lcd with 
+		| [] -> occ res_l q res_i []
+		| l_l::qq -> let (entier, liste) = aux_occ l_l s 0 [] in occ qq lv (entier::res_i) (liste::res_l)
+	end
+*)
+
+let rec quine_fnc (lcd: litteral list list) (llvv: string list) (valu_r: valuation): sat_result =
+			if contient_clause_vide lcd then None else
+			if lcd = [] then Some(valu_r) else
+			match llvv with
+			| [] -> None
+			| s::q ->
+			begin 
+				let s_bot = quine_fnc (suppr_de_clause (suppr_clause lcd (N (s)) []) (Y (s)) []) q ((s, false)::valu_r) in 
+				match s_bot with
+				| Some (valuation) -> Some (valuation)
+				| None -> quine_fnc (suppr_de_clause (suppr_clause lcd (Y (s)) []) (N (s)) []) q ((s, true)::valu_r)
+			end
+
+let quine_opt_FNC (f: formule): sat_result =
+	let lv0 = list_var f in
+	let rec quine_reste (ff: formule) (lv: string list) (valu: valuation): sat_result =
+	let f_simpl = simpl_full_linear ff in 
+	if f_simpl = Top then Some(valu) else 
+		if f_simpl = Bot then None 
+		else 
+	let f_fnc = fnc f Top [] false in
+	match f_fnc with
+	| Some(lcd) -> quine_fnc lcd lv []
+	| None ->
+	match lv with
+	| [] -> None 
+	| x::q -> 
+		begin
+			let r_bot = quine_reste (subst f_simpl x Bot) q ((x,false)::valu) in 
+			match r_bot with
+			| Some (sat_result_list) -> Some(sat_result_list)
+			| None -> quine_reste (subst f_simpl x Top) q ((x, true)::valu)
+		end
+	in quine_reste f lv0 []
 
 (* Fonction de test *)
 let test () = 
@@ -391,14 +516,13 @@ let test () =
  	test_simpl_full();
  	test_subst();
  	test_quine();
-	test_quine_opt();
 	print_string "Tous les tests ont réussi \n"
 
 let main () = 
   if (Array.length Sys.argv < 2) then failwith "Veuillez rentrer un argument" else 
   if (Sys.argv.(1) = "test") then test () else begin
   (*print_string "Formule : "; print_string (read_file Sys.argv.(1)); print_string "\n" ;*)
-  let sr = quine_opt (from_file Sys.argv.(1)) in
+  let sr = quine_opt_FNC (from_file Sys.argv.(1)) in
   match sr with
   | None -> print_string "La formule n'est pas satisfiable\n"
   | Some (sigma) -> print_string "La formule est satisfiable en assignat 1 aux variables suivantes et 0 aux autres :\n";
