@@ -300,18 +300,37 @@ char* contrainte_tous_carres(int n){
     return res;
 }
 
-void gen_formule_n_sudoku(int n, char* filename){
+char* conditions_initiales(char* file_name, int n){
+    FILE* file =  fopen(file_name, "r");
+    assert (file != NULL);
+    char** tab = malloc(n*sizeof(char*));
+    for(int i = 0; i<n; i++ ){
+        char* string = malloc(8*sizeof(char));
+        fscanf(file, "%s ", string);
+        tab[i] = string;
+    }
+    char* res = toutes_vraies(tab, n);
+    fclose(file); 
+    free(tab);  
+    return res;
+}
+
+void gen_formule_n_sudoku(int n, char* filename, int p){
     FILE* f = fopen(filename, "w");
-    char** tab = malloc(4*sizeof(char*));
+    char** tab = malloc(5*sizeof(char*));
     tab[0] = contrainte_toutes_cases(n);
     tab[1] = contrainte_toutes_lignes(n);
     tab[2] = contrainte_toutes_colonnes(n);
     tab[3] = contrainte_tous_carres(n);
+    tab[4] = conditions_initiales("conditions.txt", p);
 
-    char* res = toutes_vraies(tab,4);
+    char* res = toutes_vraies(tab,5);
     free(tab);
     fprintf(f,"%s",res);
+    fclose(f);
 }
+
+
 
 
 void test(){
@@ -320,16 +339,19 @@ void test(){
     // printf ("%s", contrainte_une_ligne_un_chiffre(2,0,5));
     // printf("%s", contrainte_toutes_lignes(2));
     // printf("%s", contrainte_une_colonne_un_chiffre(1,2,5));
-    printf("%s", contrainte_toutes_colonnes(2));
+    //printf("%s", contrainte_toutes_colonnes(2));
     // printf("%s", contrainte_un_carre_un_chiffre(2,1,1,2));
     // printf("%s", contrainte_tous_carres(2));
+    //printf("%s", conditions_initiales("conditions.txt", 3));
 }
+
 
 int main(int argc, char** argv){
     test();
-    assert(argc == 2);
+    assert(argc == 3);
 
     int taille_string = strlen(argv[1]);
+    int taille_string_2 = strlen(argv[2]);
     char* file_out = malloc((12+taille_string)*sizeof(char));
     strcat(file_out,argv[1]);
     strcat(file_out,"_sudoku.txt\0");
@@ -340,6 +362,12 @@ int main(int argc, char** argv){
         n+=(argv[1][i]-'0')*p;
         p=10*p;
     }
-    gen_formule_n_sudoku(n,file_out);
+    int n_2 = 0;
+    p = 1;
+    for (int i=taille_string_2-1; i>-1; i--){
+        n_2+=(argv[2][i]-'0')*p;
+        p=10*p;
+    }
+    gen_formule_n_sudoku(n,file_out,n_2);
     printf("fichier %s créé\n", file_out);
 }
