@@ -89,7 +89,6 @@ char* contrainte_une_ligne_un_chiffre(int k, int i, int n){
     return res;
 }
 
-// Exprime la contrainte d'exactement une fois chaque chiffre sur chaque ligne
 char* contrainte_toutes_lignes(int n){
     char** tab = malloc(n*n*n*n*sizeof(char*));
     for (int k = 0; k<n*n; k++){
@@ -238,7 +237,6 @@ char* contrainte_une_ligne_un_chiffre(int k, int i, int n){
     return res;
 }
 
-// Exprime la contrainte d'exactement une fois chaque chiffre sur chaque ligne
 char* contrainte_toutes_lignes(int n){
     char** tab = malloc(n*n*n*n*sizeof(char*));
     for (int k = 0; k<n*n; k++){
