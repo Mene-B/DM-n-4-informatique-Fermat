@@ -23,9 +23,6 @@ char* contrainte_toutes_lignes(int n);
 // Exprime la contrainte d'au moins une fois le chiffre k sur la colonne i
 char* contrainte_une_colonne_un_chiffre(int k, int i, int n);
 
-// Exprime la contrainte d'au moins une fois le chiffre k sur chaque colonne
-char* contrainte_toutes_colonnes_un_chiffre(int k, int n);
-
 // Exprime la contrainte d'au moins une fois chaque chiffre sur chaque colonne
 char* contrainte_toutes_colonnes(int n);
 
